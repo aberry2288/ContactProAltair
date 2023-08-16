@@ -84,10 +84,11 @@ namespace ContactProAltair.Controllers
 
             return View(nameof(Index), model);
         }
+
         [HttpGet]
         public async Task<IActionResult> EmailContact(int? id)
         {
-            if(id = null)
+            if(id == null)
             {
                 return NotFound();
             }
