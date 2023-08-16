@@ -7,23 +7,31 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContactProAltair.Data;
 using ContactProAltair.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace ContactProAltair.Controllers
 {
+    [Authorize]
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Categories
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Categories.Include(c => c.AppUser);
-            return View(await applicationDbContext.ToListAsync());
+            string userId = _userManager.GetUserId(User)!;
+
+            List<Category> categories = await _context.Categories.Where(c => c.AppUserId == userId).ToListAsync();
+
+            return View(categories);
         }
 
         // GET: Categories/Details/5
@@ -34,9 +42,10 @@ namespace ContactProAltair.Controllers
                 return NotFound();
             }
 
-            var category = await _context.Categories
-                .Include(c => c.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            string userId = _userManager.GetUserId(User)!;   
+
+            Category? category = await _context.Categories.Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == userId);
+
             if (category == null)
             {
                 return NotFound();
@@ -48,7 +57,7 @@ namespace ContactProAltair.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id");
+          
             return View();
         }
 
@@ -57,15 +66,20 @@ namespace ContactProAltair.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,AppUserId,Name")] Category category)
+        public async Task<IActionResult> Create([Bind("Name")] Category category)
         {
+            ModelState.Remove("AppUserId");
+
             if (ModelState.IsValid)
             {
+                category.AppUserId = _userManager.GetUserId(User);
+
                 _context.Add(category);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
+          
             return View(category);
         }
 
@@ -77,12 +91,15 @@ namespace ContactProAltair.Controllers
                 return NotFound();
             }
 
-            var category = await _context.Categories.FindAsync(id);
+            string userId = _userManager.GetUserId(User)!;
+
+            Category? category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.AppUserId == userId);
+
             if (category == null)
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
+          
             return View(category);
         }
 
@@ -118,7 +135,7 @@ namespace ContactProAltair.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", category.AppUserId);
+       
             return View(category);
         }
 
@@ -155,14 +172,14 @@ namespace ContactProAltair.Controllers
             {
                 _context.Categories.Remove(category);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CategoryExists(int id)
         {
-          return (_context.Categories?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Categories?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
