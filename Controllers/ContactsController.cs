@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using ContactProAltair.Services.Interfaces;
 using ContactProAltair.Enums;
+using System.ComponentModel.DataAnnotations;
+using ContactProAltair.Services;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace ContactProAltair.Controllers
 {
@@ -21,19 +24,22 @@ namespace ContactProAltair.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
         private readonly IAddressBookService _addressBookService;
+        private readonly IEmailSender _emailService;
 
-        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService, IAddressBookService addressBookService)
+        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService, IAddressBookService addressBookService, IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
             _addressBookService = addressBookService;
-
+            _emailService = emailService;
         }
 
         // GET: Contacts
-        public async Task<IActionResult> Index(int? categoryId)
+        public async Task<IActionResult> Index(int? categoryId, string? swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
+
             string? userId = _userManager.GetUserId(User);
 
             List<Contact> contacts = await _context.Contacts.Include(c => c.Categories).Where(c => c.AppUserID == userId).ToListAsync();
@@ -86,22 +92,71 @@ namespace ContactProAltair.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> EmailContact(int? id)
+        public async Task<IActionResult> EmailContact(int? id, string? swalMessage = null)
         {
-            if(id == null)
+            ViewData["SwalMessage"] = swalMessage;
+
+            if (id == null)
             {
                 return NotFound();
             }
 
-            return View();
+            string? appUserId = _userManager.GetUserId(User);
+
+            Contact? contact = await _context.Contacts.Where(c => c.AppUserID == appUserId).FirstOrDefaultAsync(c => c.Id == id);
+
+            if (contact == null)
+            {
+                return NotFound();
+            }
+
+            //Instantiate & populate email data
+            EmailData emailData = new EmailData()
+            {
+                EmailAddress = contact.Email,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName
+            };
+
+            EmailContactViewModel viewModel = new EmailContactViewModel()
+            {
+                Contact = contact,
+                EmailData = emailData
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
         public async Task<IActionResult> EmailContact(EmailContactViewModel viewModel)
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
 
+                string? swalMessage = string.Empty;
+
+                try
+                {
+                    string? email = viewModel.EmailData?.EmailAddress;
+                    string? subject = viewModel.EmailData?.EmailSubject;
+                    string? htmlMessage = viewModel.EmailData?.EmailBody;
+
+                    await _emailService.SendEmailAsync(email!, subject!, htmlMessage!);
+
+                    //Send alert for success
+                    swalMessage = "Success: Email Sent!";
+
+                    return RedirectToAction(nameof(Index), "Contacts", new { swalMessage = swalMessage });
+                }
+                catch (Exception)
+                {
+
+                    swalMessage = "Error: Email Failed to Send!";
+
+                    return RedirectToAction(nameof(EmailContact), new {swalMessage = swalMessage });
+
+                    throw;
+                }
             }
 
             return View(viewModel);

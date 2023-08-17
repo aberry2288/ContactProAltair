@@ -21,9 +21,20 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm  border-bottom box-shadow ">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><img class="logoImageCorner" height="50" src="/img/A - Z Contacts Logo.png" /></a>
+                @if (!User.Identity!.IsAuthenticated)
+                {
+                    <a class="navbar-brand text-light" asp-area="" asp-controller="Home" asp-action="Index">A - Z Contacts</a>
+                }
+                else
+                {
+                    <a class="navbar-brand text-light nav-link dropdown-toggle" data-bs-toggle="dropdown">A - Z Contacts</a>
+                    <div class="dropdown-menu dropDownBackground">
+                        <a class="dropdown-item text-light" asp-area="" asp-controller="Contacts" asp-action="Index">My Contacts</a>
+                        <a class="dropdown-item text-light" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
+                    </div>
+                }
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -31,10 +42,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi houseColor bi-house-door-fill"></i></a>
                         </li>
                     </ul>
                     <partial name="_LoginPartial" />
@@ -43,26 +51,25 @@
         </nav>
     </header>
     <div class="content" id="mainHero">
-        <section class="container h-100"">
+        <section class="container h-100">
             @RenderBody()
         </section>
     </div>
 
     <footer class="footer container-fluid">
-        <div class="row align-items-center py-2">
+        <div class="row align-items-center py-2 ">
             <div class="col">
                 <div class="row align-items-center gy-2">
-                    <div class="col d-flex justify-content-center justify-content-md-start order-last order-md-first copyright">
+                    <div class="col text-light d-flex justify-content-center justify-content-md-start order-last order-md-first copyright">
                         &copy; @DateTime.Now.Year All Rights Reserved
                     </div>
                     <div class="col d-flex justify-content-center">
                         <img src="/img/Adam Berry Tree White 3 cropped.png" height="50">
                     </div>
                     <div class="col-12 col-md d-flex justify-content-center justify-content-md-end">
-                        <a href="" class="socialicons"><i class="bi bi-linkedin p-2 "></i></a>
-                        <a href="" class="socialicons"><i class="bi bi-twitter p-2"></i></a>
-                        <a href="" class="socialicons"><i class="bi bi-youtube p-2"></i></a>
-                        <a href="#" class="socialicons"><i class="bi bi-instagram p-2 "></i></a>
+                        <a target="_blank" href="https://www.linkedin.com/in/adam-berry-890939246/" class="socialicons"><i class="bi bi-linkedin p-2 "></i></a>
+
+                        <a target="_blank" href="#" class="socialicons"><i class="bi bi-github p-2 "></i></a>
                     </div>
                 </div>
             </div>

@@ -9,6 +9,9 @@ using ContactProAltair.Data;
 using ContactProAltair.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using MimeKit;
+using System.Net.Mail;
 
 namespace ContactProAltair.Controllers
 {
@@ -17,11 +20,13 @@ namespace ContactProAltair.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailService;
 
-        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // GET: Categories
@@ -33,6 +38,75 @@ namespace ContactProAltair.Controllers
 
             return View(categories);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> EmailCategory(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            string? appUserId = _userManager?.GetUserId(User);
+
+            Category? category = await _context.Categories.Where(c => c.AppUserId == appUserId).Include(c => c.Contacts).FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            //Prep data for the view
+            //Instantiate and hydrate the model
+
+            IEnumerable<string?> emails = category.Contacts.Select(c => c.Email);
+
+            EmailData emailData = new EmailData()
+            {
+                GroupName = category.Name,
+                EmailAddress = string.Join("; ", emails),
+                
+            };            
+
+            ViewData["EmailContacts"] = category.Contacts.ToList();
+
+            return View(emailData);
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EmailCategory(EmailData emailData)
+        {
+            if (ModelState.IsValid)
+            {
+                string? swalMessage = string.Empty;
+
+                try
+                {
+                    string? email = emailData.EmailAddress;
+                    string? subject = emailData.EmailSubject;
+                    string? htmlMessage = emailData.EmailBody;
+
+                    await _emailService.SendEmailAsync(email!, subject!, htmlMessage!);
+
+                    //Send alert for success
+                    swalMessage = "Success: Email Sent!";
+
+                    return RedirectToAction(nameof(Index), "Contacts", new {swalMessage = swalMessage });
+                }
+                catch (Exception)
+                {
+                    swalMessage = "Error: Email Failed to Send!";
+                    return RedirectToAction(nameof(EmailCategory), new { swalMessage = swalMessage });
+
+                    throw;
+                }
+            }
+
+            return View(emailData);
+        
+
+    }
 
         // GET: Categories/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -148,8 +222,9 @@ namespace ContactProAltair.Controllers
             }
 
             var category = await _context.Categories
-                .Include(c => c.AppUser)
+                .Include(c => c.Contacts)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (category == null)
             {
                 return NotFound();

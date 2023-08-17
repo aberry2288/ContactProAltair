@@ -16,6 +16,19 @@ body {
     height: 100%;
 }
 
+.houseColor {
+    color: ghostwhite;
+}
+
+.dropDownBackground {
+    
+    background-color: var(--cf-primaryColor);
+}
+
+.dropdown-item:hover {
+    background-color: var(--cf-primaryColorDark) !important;
+}
+
 body {
     /* fallback for old browsers */
     background-color: var(--cf-primaryColorLight);
@@ -66,8 +79,9 @@ nav {
 }
 
 .navbar {
-    background-color: var(--cf-primaryColor)
-    
+    background-color: var(--cf-primaryColor);
+  
+        
 }
 
 .logoImageCorner {
@@ -173,13 +187,13 @@ main {
 }
 
 .socialicons {
-    color: var(--cf-primaryColorDark);
+    color: ghostwhite;
     opacity: .9;
     font-size: 2rem;
 }
 
     .socialicons:hover {
-        color: var(--cf-primaryColor);
+        color: darkblue;
         opacity: 1;
         cursor: pointer;
     }
@@ -216,12 +230,20 @@ figcaption {
     font-size: 0.8rem;
     text-align: center;
 }
+
+@media (min-width: 576px) {
+    .navbar {
+        height: 60px
+    }
+}
 /* X-Large devices (large desktops, 1200px and up) */
 @media (min-width: 1200px) {
     .heroTitle {
         font-size: 3.5rem;
     }
 }
+
+
 
 .navIcon {
     height: 200px;

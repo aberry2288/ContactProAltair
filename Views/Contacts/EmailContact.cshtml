@@ -2,11 +2,7 @@
 @using ContactProAltair.Services;
 @model ContactProAltair.Models.EmailContactViewModel;
 @inject IImageService _ImageService
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+
 
 <style>
     .ck-editor__editable_inline {
@@ -20,7 +16,7 @@
     <img class="square-img" src="@_ImageService.ConvertByteArrayToFile(Model.Contact?.ImageData!, Model.Contact?.ImageType!)">
 </div>
 <div class="p-2">
-    <form asp-action="" asp-controller="" method="post">
+    <form asp-action="EmailContact" asp-controller="Contacts" method="post">
         <input type="hidden" asp-for="EmailData!.GroupName" /> @*Reference the Group Name*@
         <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
             <div class="col col-md-12">
@@ -59,4 +55,27 @@
                 window.editor = editor;
             });
     </script>
+
+    
+    <!--Sweet Alerts-->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let message = '@(ViewBag.SwalMessage)';
+        if (!message.includes("Error") && message != '') {
+            Swal.fire({
+                backdrop: false,
+                icon: 'success',
+                title: message,
+                showConfirmButton: true
+            });
+        } else if (message.includes("Error")) {
+            Swal.fire({
+                backdrop: false,
+                icon: 'error',
+                title: 'Oops...',
+                text: message
+            });
+        }
+    </script>
+
 }
