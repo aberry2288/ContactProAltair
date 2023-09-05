@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = DataUtility.GetConnectionString(builder.Configuration) ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -32,6 +32,12 @@ builder.Services.AddScoped<IEmailSender, EmailService> ();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 var app = builder.Build();
+
+var scope = app.Services.CreateScope();
+
+await DataUtility.ManageDataAsync(scope.ServiceProvider);
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
