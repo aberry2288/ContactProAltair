@@ -25,11 +25,11 @@
             <div class="container-fluid">
                 @if (!User.Identity!.IsAuthenticated)
                 {
-                    <a class="navbar-brand text-light" asp-area="" asp-controller="Home" asp-action="Index">A - Z Contacts</a>
+                    <a class="navbar-brand text-light" asp-area="" asp-controller="Home" asp-action="Index">Address Book</a>
                 }
                 else
                 {
-                    <a class="navbar-brand text-light nav-link dropdown-toggle" data-bs-toggle="dropdown">A - Z Contacts</a>
+                    <a class="navbar-brand text-light nav-link dropdown-toggle" data-bs-toggle="dropdown">Address Book</a>
                     <div class="dropdown-menu dropDownBackground">
                         <a class="dropdown-item text-light" asp-area="" asp-controller="Contacts" asp-action="Index">My Contacts</a>
                         <a class="dropdown-item text-light" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
